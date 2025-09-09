@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WebAppVulnScanner</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>WebAppVulnScanner</h1>
+    <form id="scan-form">
+      <input id="url" name="url" placeholder="Enter target URL (include http://)" />
+      <button type="submit">Start Scan</button>
+    </form>
+    <div id="status"></div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('scan-form');
+    const status = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultsEl.innerHTML = '';
+      status.textContent = 'Scanning — please wait...';
+      const url = document.getElementById('url').value.trim();
+      if (!url) { status.textContent = 'Enter a URL'; return; }
+      try {
+        const formData = new FormData();
+        formData.append('url', url);
+        const resp = await fetch('/scan', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (!data.ok) {
+          status.textContent = 'Scan failed: ' + (data.error || 'unknown error');
+          return;
+        }
+        status.textContent = 'Scan finished — ' + data.results.issues.length + ' issue(s) found';
+        if (data.results.issues.length === 0) {
+          resultsEl.innerHTML = '<p>No issues found.</p>';
+        } else {
+          const ul = document.createElement('ul');
+          data.results.issues.forEach(issue => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${issue.type}</strong> on <a href="${issue.url}" target="_blank">${issue.url}</a><div>Payload: <code>${issue.payload || ''}</code></div><div>Evidence: ${issue.evidence || ''}</div><div>Severity: ${issue.severity || ''}</div>`;
+            ul.appendChild(li);
+          });
+          resultsEl.appendChild(ul);
+        }
+      } catch (err) {
+        status.textContent = 'Error: ' + err;
+      }
+    });
+  </script>
+</body>
+</html>

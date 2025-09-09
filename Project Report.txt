@@ -1,0 +1,86 @@
+
+WEBAPP VULNERABILITY SCANNER — PROJECT REPORT
+
+1. Executive Summary
+   This project provides an automated web application vulnerability scanning pipeline designed to run from GitHub (locally or via GitHub Actions). It targets common OWASP Top-10 risks such as injection, XSS, security misconfiguration, and weak TLS. The scanner produces machine-readable and human-readable reports that can be used in CI/CD pipelines.
+
+Status: Draft based on standard patterns for GitHub-integrated scanners. Replace "Assumed" items with details from your repository.
+
+2. Objectives
+
+* Automate DAST scans against a target URL during pull requests and on a schedule.
+* Fail builds on critical findings and show summaries in pull request comments.
+* Archive artifacts (HTML and JSON reports) for triage and trend tracking.
+
+3. Architecture (Assumed)
+
+* Language: Python wrapper with containerized scanner.
+* Core Scanners: Likely OWASP ZAP, Wapiti, Nikto, or Nuclei.
+* CI/CD: GitHub Actions workflows triggered on push, pull\_request, and nightly cron.
+* Artifacts: SARIF, JSON, and HTML reports uploaded to GitHub Actions artifacts or GitHub Security tab.
+
+4. Usage and Setup (Assumed)
+   Inputs: Target URL, optional exclude/include paths, authentication cookies or credentials via GitHub Secrets.
+   Local Run Example: python main.py --url [https://example.com](https://example.com) --out ./reports
+   GitHub Actions Workflow:
+   Step 1: Checkout
+   Step 2: Setup Python and containers
+   Step 3: Run scan
+   Step 4: Upload artifacts
+   Step 5: (Optional) Upload SARIF results to GitHub Code Scanning
+
+5. Findings (Template)
+   Scan date: <YYYY-MM-DD>
+   Target: <URL>
+   Scope: <paths and exclusions>
+   Authentication: <none or method used>
+
+Summary by severity:
+Critical: 0
+High: 0
+Medium: 0
+Low: 0
+Info: 0
+
+Top issues (examples):
+
+1. Reflected XSS in /search?q=. Unescaped input echoed in response.
+   Risk: Token theft or session hijacking.
+   Fix: Output encoding, CSP, and input validation.
+
+2. TLS Weakness: Outdated ciphers supported.
+   Fix: Enforce TLS 1.2 or higher with modern cipher suites.
+
+3. Missing Security Headers: CSP and X-Frame-Options headers absent.
+   Fix: Add headers per OWASP ASVS recommendations.
+
+Reports: report.html, findings.json, results.sarif
+
+6. Reliability and Limitations
+
+* False positives and negatives are common in DAST; manual validation is needed.
+* Authentication coverage requires stable login flows.
+* Dynamic or JavaScript-heavy content may need headless browser support.
+* Rate limits may need throttling to avoid denial-of-service-like behavior.
+
+7. Recommendations
+
+1) Document the exact scanner tools and their versions.
+2) Configure CI pipeline to fail on Critical or High findings, warn on Medium.
+3) Add authenticated scans for realistic coverage.
+4) Use GitHub Secrets for tokens and never commit them.
+5) Maintain baselines and trend analysis with weekly scans.
+6) Provide developer guidance by mapping findings to OWASP Top 10, CWE, and ASVS.
+7) Reduce noise with allowlists for known acceptable risks.
+
+8. Maintenance
+
+* Pin tool versions and update monthly.
+* Re-scan after major application changes.
+* Review exclusions and severity thresholds periodically.
+
+9. Compliance Mapping (Template)
+
+* OWASP Top 10: A1, A3, A5 (update per findings)
+* CWE IDs: Map each finding to CWE identifiers
+* ASVS/WSTG: Reference relevant controls and tests
